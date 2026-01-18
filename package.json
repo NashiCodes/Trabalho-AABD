@@ -1,0 +1,26 @@
+{
+  "name": "trabalho-aabd",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/NashiCodes/Trabalho-AABD#readme",
+  "bugs": {
+    "url": "https://github.com/NashiCodes/Trabalho-AABD/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NashiCodes/Trabalho-AABD.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "scripts": {
+    "start": "node ./src/index.js",
+    "dev": "node ./src/index.js"
+  },
+  "dependencies": {
+    "body-parser": "^2.2.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.1.4"
+  }
+}
