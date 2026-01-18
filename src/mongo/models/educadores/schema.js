@@ -53,9 +53,4 @@ const educadorSchema = new mongoose.Schema(
   }
 );
 
-// Índices
-educadorSchema.index({ especialidades: 1 });
-
-const Educador = mongoose.model('Educador', educadorSchema);
-
-module.exports = Educador;
+module.exports = educadorSchema;

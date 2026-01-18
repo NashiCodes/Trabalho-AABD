@@ -84,13 +84,4 @@ const treinoSchema = new mongoose.Schema(
   }
 );
 
-// Índices
-treinoSchema.index({ criadoPor: 1 });
-treinoSchema.index({ nivel: 1 });
-treinoSchema.index({ objetivo: 1 });
-treinoSchema.index({ tags: 1 });
-treinoSchema.index({ nome: 'text', descricao: 'text' });
-
-const Treino = mongoose.model('Treino', treinoSchema);
-
-module.exports = Treino;
+module.exports = treinoSchema;

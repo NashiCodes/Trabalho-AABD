@@ -66,12 +66,4 @@ const execucaoSchema = new mongoose.Schema(
   }
 );
 
-// Índices
-execucaoSchema.index({ alunoId: 1, dataHora: -1 });
-execucaoSchema.index({ treinoId: 1 });
-execucaoSchema.index({ dataHora: -1 });
-execucaoSchema.index({ concluido: 1 });
-
-const Execucao = mongoose.model('Execucao', execucaoSchema);
-
-module.exports = Execucao;
+module.exports = execucaoSchema;

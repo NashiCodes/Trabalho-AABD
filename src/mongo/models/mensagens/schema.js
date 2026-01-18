@@ -22,6 +22,10 @@ const mensagemSchema = new mongoose.Schema(
       required: true,
       enum: ['Educador', 'Aluno'],
     },
+    assunto: {
+      type: String,
+      trim: true,
+    },
     conteudo: {
       type: String,
       required: true,
@@ -38,6 +42,23 @@ const mensagemSchema = new mongoose.Schema(
     dataLeitura: {
       type: Date,
     },
+    arquivosAnexos: [
+      {
+        nome: {
+          type: String,
+          required: true,
+        },
+        url: {
+          type: String,
+          required: true,
+        },
+        tipo: {
+          type: String,
+          enum: ['imagem', 'video', 'documento', 'outro'],
+          default: 'outro',
+        },
+      },
+    ],
   },
   {
     timestamps: true,
@@ -45,10 +66,4 @@ const mensagemSchema = new mongoose.Schema(
   }
 );
 
-// Índices
-mensagemSchema.index({ destinatarioId: 1, lida: 1, dataHora: -1 });
-mensagemSchema.index({ remetenteId: 1, dataHora: -1 });
-
-const Mensagem = mongoose.model('Mensagem', mensagemSchema);
-
-module.exports = Mensagem;
+module.exports = mensagemSchema;

@@ -45,12 +45,4 @@ const exercicioSchema = new mongoose.Schema(
   }
 );
 
-// Índices
-exercicioSchema.index({ grupoMuscular: 1 });
-exercicioSchema.index({ tipo: 1 });
-exercicioSchema.index({ nivelDificuldade: 1 });
-exercicioSchema.index({ equipamento: 1 });
-
-const Exercicio = mongoose.model('Exercicio', exercicioSchema);
-
-module.exports = Exercicio;
+module.exports = exercicioSchema;

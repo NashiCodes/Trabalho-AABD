@@ -33,11 +33,4 @@ const avaliacaoSchema = new mongoose.Schema(
   }
 );
 
-// Índices
-avaliacaoSchema.index({ educadorId: 1 });
-avaliacaoSchema.index({ alunoId: 1 });
-avaliacaoSchema.index({ dataAvaliacao: -1 });
-
-const Avaliacao = mongoose.model('Avaliacao', avaliacaoSchema);
-
-module.exports = Avaliacao;
+module.exports = avaliacaoSchema;

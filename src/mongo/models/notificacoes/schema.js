@@ -49,10 +49,4 @@ const notificacaoSchema = new mongoose.Schema(
   }
 );
 
-// Índices
-notificacaoSchema.index({ usuarioId: 1, lida: 1, dataCriacao: -1 });
-notificacaoSchema.index({ tipo: 1 });
-
-const Notificacao = mongoose.model('Notificacao', notificacaoSchema);
-
-module.exports = Notificacao;
+module.exports = notificacaoSchema;
