@@ -1,40 +1,36 @@
 function applyValidators(schema) {
-  schema.pre('save', function (next) {
+  schema.pre('save', async function () {
     if (this.isNew) {
       console.log(`Novo educador cadastrado: ${this.nome}`);
     }
-    next();
   });
 
   schema.post('save', function (doc) {
     console.log(`Educador salvo com sucesso: ${doc._id}`);
   });
 
-  schema.pre('validate', function (next) {
+  schema.pre('validate', function () {
     if (this.contato?.email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(this.contato.email)) {
-        return next(new Error('Email inválido'));
+        this.invalidate('contato.email', 'Email inválido');
       }
     }
 
     if (this.avaliacaoMedia !== undefined) {
       if (this.avaliacaoMedia < 0 || this.avaliacaoMedia > 5) {
-        return next(new Error('Avaliação média deve estar entre 0 e 5'));
+        this.invalidate('avaliacaoMedia', 'Avaliação média deve estar entre 0 e 5');
       }
     }
-
-    next();
   });
 
-  schema.pre('findOneAndUpdate', function (next) {
+  schema.pre('findOneAndUpdate', function () {
     const update = this.getUpdate();
     if (update.$set?.['avaliacaoMedia']) {
       if (update.$set['avaliacaoMedia'] < 0 || update.$set['avaliacaoMedia'] > 5) {
-        return next(new Error('Avaliação média deve estar entre 0 e 5'));
+        throw new Error('Avaliação média deve estar entre 0 e 5');
       }
     }
-    next();
   });
 }
 

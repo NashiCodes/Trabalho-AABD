@@ -10,6 +10,16 @@ const connectMongoDB = async () => {
   }
 };
 
+const connectMongoDBTest = async () => {
+  try {
+    await mongoose.connect('mongodb://localhost:27017/mongofit_test');
+    console.log('Conectado ao MongoDB Test');
+  } catch (error) {
+    console.error('Erro ao conectar ao MongoDB Test:', error);
+    process.exit(1);
+  }
+};
+
 const mongoHealth = async () => {
   return mongoose.connection.readyState;
 };
@@ -32,4 +42,4 @@ const mongoInfo = () => {
   };
 };
 
-module.exports = { connectMongoDB, mongoose, mongoHealth, mongoInfo };
+module.exports = { connectMongoDB, connectMongoDBTest, mongoose, mongoHealth, mongoInfo };

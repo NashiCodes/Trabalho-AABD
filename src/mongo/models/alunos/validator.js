@@ -27,17 +27,17 @@ const applyValidators = (schema) => {
   });
 
   // PRE-VALIDATE - executa antes da validação
-  schema.pre('validate', function (next) {
+  schema.pre('validate', function () {
     // Validações customizadas de negócio
     if (this.dadosFisicos?.peso && this.dadosFisicos.peso < 20) {
-      return next(new Error('Peso deve ser maior que 20kg'));
+      throw new Error('Peso deve ser maior que 20kg');
     }
 
     if (
       this.dadosFisicos?.altura &&
       (this.dadosFisicos.altura < 0.5 || this.dadosFisicos.altura > 3)
     ) {
-      return next(new Error('Altura deve estar entre 0.5m e 3m'));
+      throw new Error('Altura deve estar entre 0.5m e 3m');
     }
 
     // Validar idade mínima (13 anos)
@@ -45,11 +45,9 @@ const applyValidators = (schema) => {
       const idade =
         new Date().getFullYear() - new Date(this.dadosPessoais.dataNascimento).getFullYear();
       if (idade < 13) {
-        return next(new Error('Aluno deve ter no mínimo 13 anos'));
+        throw new Error('Aluno deve ter no mínimo 13 anos');
       }
     }
-
-    next();
   });
 
   // POST-SAVE - executa depois de salvar
@@ -62,7 +60,7 @@ const applyValidators = (schema) => {
   });
 
   // PRE-UPDATE - executa antes de atualizar
-  schema.pre('findOneAndUpdate', function (next) {
+  schema.pre('findOneAndUpdate', function () {
     const update = this.getUpdate();
 
     // Recalcular IMC se peso ou altura mudaram
@@ -78,20 +76,16 @@ const applyValidators = (schema) => {
     if (update.dadosPessoais?.email) {
       update.dadosPessoais.email = update.dadosPessoais.email.toLowerCase().trim();
     }
-
-    next();
   });
 
   // POST-UPDATE - executa depois de atualizar
-  schema.post('findOneAndUpdate', function (doc, next) {
+  schema.post('findOneAndUpdate', function (doc) {
     if (doc) {
       console.log(`✏️ Aluno ${doc.nome} foi atualizado`);
     }
-    next();
   });
-
   // POST-REMOVE - executa depois de deletar
-  schema.post('findOneAndDelete', function (doc, next) {
+  schema.post('findOneAndDelete', function (doc) {
     if (doc) {
       console.log(`🗑️ Aluno ${doc.nome} foi removido`);
       // Aqui você pode adicionar:
@@ -99,7 +93,6 @@ const applyValidators = (schema) => {
       // - Notificar educador
       // - Arquivar dados
     }
-    next();
   });
 };
 

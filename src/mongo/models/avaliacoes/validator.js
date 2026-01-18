@@ -25,16 +25,14 @@ function applyValidators(schema) {
     console.log(`Avaliação salva com sucesso: ${doc._id}`);
   });
 
-  schema.pre('validate', function (next) {
+  schema.pre('validate', async function () {
     if (this.nota < 1 || this.nota > 5) {
-      return next(new Error('Nota deve estar entre 1 e 5'));
+      throw new Error('Nota deve estar entre 1 e 5');
     }
 
     if (this.comentario && this.comentario.length > 1000) {
-      return next(new Error('Comentário não pode ter mais de 1000 caracteres'));
+      throw new Error('Comentário não pode ter mais de 1000 caracteres');
     }
-
-    next();
   });
 
   schema.post('findOneAndDelete', async function (doc) {

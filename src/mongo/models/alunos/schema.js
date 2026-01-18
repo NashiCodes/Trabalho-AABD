@@ -10,7 +10,7 @@ const alunoSchema = new mongoose.Schema(
     educadorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Educador',
-      required: true,
+      required: false,
     },
     dadosPessoais: {
       email: {

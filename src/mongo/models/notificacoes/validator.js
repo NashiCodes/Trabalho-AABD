@@ -1,5 +1,5 @@
 function applyValidators(schema) {
-  schema.pre('save', function (next) {
+  schema.pre('save', async function () {
     if (this.isNew) {
       console.log(`Nova notificação criada para ${this.usuarioTipo}: ${this.titulo}`);
     }
@@ -7,34 +7,30 @@ function applyValidators(schema) {
     if (this.lida && !this.dataLeitura) {
       this.dataLeitura = new Date();
     }
-
-    next();
   });
 
   schema.post('save', function (doc) {
     console.log(`Notificação salva com sucesso: ${doc._id}`);
   });
 
-  schema.pre('validate', function (next) {
+  schema.pre('validate', async function () {
     if (this.titulo && this.titulo.length > 200) {
-      return next(new Error('Título não pode ter mais de 200 caracteres'));
+      throw new Error('Título não pode ter mais de 200 caracteres');
     }
 
     if (this.mensagem && this.mensagem.length > 1000) {
-      return next(new Error('Mensagem não pode ter mais de 1000 caracteres'));
+      throw new Error('Mensagem não pode ter mais de 1000 caracteres');
     }
 
     if (this.lida === false && this.dataLeitura) {
-      return next(new Error('Notificação não lida não pode ter data de leitura'));
+      throw new Error('Notificação não lida não pode ter data de leitura');
     }
 
     if (this.link) {
       if (!this.link.startsWith('/') && !this.link.startsWith('http')) {
-        return next(new Error('Link deve ser um caminho válido ou URL'));
+        throw new Error('Link deve ser um caminho válido ou URL');
       }
     }
-
-    next();
   });
 
   schema.pre('findOneAndUpdate', function (next) {
