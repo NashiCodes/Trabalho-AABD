@@ -1,12 +1,11 @@
-const { Execucao } = require('../../models');
+const { Execucao } = require('@models');
 
 exports.updateExecucao = async (req, res) => {
   try {
-    const execucao = await Execucao.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const execucao = await Execucao.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
     if (!execucao) {
       return res.status(404).json({ error: 'Execução não encontrada' });
     }

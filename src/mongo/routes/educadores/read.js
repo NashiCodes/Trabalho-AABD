@@ -1,4 +1,4 @@
-const { Educador } = require('../../models');
+const { Educador } = require('@models');
 
 exports.getAll = async (req, res) => {
   try {

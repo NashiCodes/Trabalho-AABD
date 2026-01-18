@@ -1,12 +1,11 @@
-const { Treino } = require('../../models');
+const { Treino } = require('@models');
 
 exports.updateTreino = async (req, res) => {
   try {
-    const treino = await Treino.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const treino = await Treino.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
     if (!treino) {
       return res.status(404).json({ error: 'Treino não encontrado' });
     }

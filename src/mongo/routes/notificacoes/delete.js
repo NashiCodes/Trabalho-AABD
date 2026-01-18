@@ -1,4 +1,4 @@
-const { Notificacao } = require('../../models');
+const { Notificacao } = require('@models');
 
 exports.deleteNotificacao = async (req, res) => {
   try {

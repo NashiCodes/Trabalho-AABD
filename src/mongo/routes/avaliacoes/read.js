@@ -1,4 +1,4 @@
-const { Avaliacao } = require('../../models');
+const { Avaliacao } = require('@models');
 
 exports.getAll = async (req, res) => {
   try {

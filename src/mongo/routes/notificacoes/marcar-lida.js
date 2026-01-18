@@ -1,4 +1,4 @@
-const { Notificacao } = require('../../models');
+const { Notificacao } = require('@models');
 
 exports.marcarComoLida = async (req, res) => {
   try {

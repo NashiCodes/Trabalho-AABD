@@ -1,4 +1,4 @@
-const { Execucao } = require('../../models');
+const { Execucao } = require('@models');
 
 exports.deleteExecucao = async (req, res) => {
   try {

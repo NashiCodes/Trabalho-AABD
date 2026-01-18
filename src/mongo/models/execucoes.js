@@ -1,65 +1,70 @@
 const mongoose = require('mongoose');
 
-const execucaoSchema = new mongoose.Schema({
-  alunoId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Aluno',
-    required: true
-  },
-  treinoId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Treino',
-    required: true
-  },
-  dataHora: {
-    type: Date,
-    default: Date.now
-  },
-  duracaoReal: {
-    type: Number,
-    min: 0
-  },
-  caloriasQueimadas: {
-    type: Number,
-    min: 0
-  },
-  feedbackAluno: {
-    type: String,
-    trim: true
-  },
-  dificuldadePercebida: {
-    type: Number,
-    min: 1,
-    max: 10
-  },
-  exerciciosRealizados: [{
-    exercicioId: {
+const execucaoSchema = new mongoose.Schema(
+  {
+    alunoId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Exercicio',
-      required: true
-    },
-    seriesRealizadas: {
-      type: Number,
+      ref: 'Aluno',
       required: true,
-      min: 0
     },
-    cargaUtilizada: {
+    treinoId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Treino',
+      required: true,
+    },
+    dataHora: {
+      type: Date,
+      default: Date.now,
+    },
+    duracaoReal: {
       type: Number,
-      min: 0
+      min: 0,
     },
-    observacoes: {
+    caloriasQueimadas: {
+      type: Number,
+      min: 0,
+    },
+    feedbackAluno: {
       type: String,
-      trim: true
-    }
-  }],
-  concluido: {
-    type: Boolean,
-    default: false
+      trim: true,
+    },
+    dificuldadePercebida: {
+      type: Number,
+      min: 1,
+      max: 10,
+    },
+    exerciciosRealizados: [
+      {
+        exercicioId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Exercicio',
+          required: true,
+        },
+        seriesRealizadas: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        cargaUtilizada: {
+          type: Number,
+          min: 0,
+        },
+        observacoes: {
+          type: String,
+          trim: true,
+        },
+      },
+    ],
+    concluido: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+    collection: 'execucoes',
   }
-}, {
-  timestamps: true,
-  collection: 'execucoes'
-});
+);
 
 // Índices
 execucaoSchema.index({ alunoId: 1, dataHora: -1 });

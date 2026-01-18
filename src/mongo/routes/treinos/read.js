@@ -1,4 +1,4 @@
-const { Treino } = require('../../models');
+const { Treino } = require('@models');
 
 exports.getAll = async (req, res) => {
   try {
@@ -27,8 +27,10 @@ exports.getById = async (req, res) => {
 
 exports.getByEducador = async (req, res) => {
   try {
-    const treinos = await Treino.find({ criadoPor: req.params.educadorId })
-      .populate('exercicios.exercicioId', 'nome grupoMuscular');
+    const treinos = await Treino.find({ criadoPor: req.params.educadorId }).populate(
+      'exercicios.exercicioId',
+      'nome grupoMuscular'
+    );
     res.json(treinos);
   } catch (error) {
     res.status(500).json({ error: error.message });

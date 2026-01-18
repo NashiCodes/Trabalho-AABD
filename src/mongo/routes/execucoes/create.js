@@ -1,4 +1,4 @@
-const { Execucao } = require('../../models');
+const { Execucao } = require('@models');
 
 exports.createExecucao = async (req, res) => {
   try {

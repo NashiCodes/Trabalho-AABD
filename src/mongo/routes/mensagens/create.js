@@ -1,4 +1,4 @@
-const { Mensagem } = require('../../models');
+const { Mensagem } = require('@models');
 
 exports.createMensagem = async (req, res) => {
   try {

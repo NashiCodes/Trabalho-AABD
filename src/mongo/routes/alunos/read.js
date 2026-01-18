@@ -1,4 +1,4 @@
-const { Aluno } = require('../../models');
+const { Aluno } = require('@models');
 
 exports.getAll = async (req, res) => {
   try {
@@ -11,7 +11,10 @@ exports.getAll = async (req, res) => {
 
 exports.getById = async (req, res) => {
   try {
-    const aluno = await Aluno.findById(req.params.id).populate('educadorId', 'nome cref especialidades');
+    const aluno = await Aluno.findById(req.params.id).populate(
+      'educadorId',
+      'nome cref especialidades'
+    );
     if (!aluno) {
       return res.status(404).json({ error: 'Aluno não encontrado' });
     }

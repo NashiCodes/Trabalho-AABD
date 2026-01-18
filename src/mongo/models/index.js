@@ -15,5 +15,5 @@ module.exports = {
   Execucao,
   Mensagem,
   Avaliacao,
-  Notificacao
+  Notificacao,
 };

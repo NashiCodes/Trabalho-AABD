@@ -1,4 +1,4 @@
-const { Avaliacao } = require('../../models');
+const { Avaliacao } = require('@models');
 
 exports.deleteAvaliacao = async (req, res) => {
   try {
