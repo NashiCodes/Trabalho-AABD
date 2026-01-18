@@ -5,12 +5,12 @@
     "baseUrl": ".",
     "paths": {
       "@mongo/*": ["src/mongo/*"],
+      "@models": ["src/mongo/models/index.js"],
       "@models/*": ["src/mongo/models/*"],
       "@routes/*": ["src/mongo/routes/*"],
       "@repositories/*": ["src/mongo/repositories/*"],
       "@services/*": ["src/mongo/services/*"]
     },
-    "checkJs": true,
     "maxNodeModuleJsDepth": 1
   },
   "exclude": ["node_modules", "**/node_modules/*"]
