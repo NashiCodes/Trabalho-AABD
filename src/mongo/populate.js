@@ -1,11 +1,11 @@
-const { populateAlunos } = require('@mongo/models/alunos/populate');
-const { populateEducadores } = require('@mongo/models/educadores/populate');
-const { populateExercicios } = require('@mongo/models/exercicios/populate');
-const { populateTreinos } = require('@mongo/models/treinos/populate');
-const { populateAvaliacoes } = require('@mongo/models/avaliacoes/populate');
-const { populateExecucoes } = require('@mongo/models/execucoes/populate');
-const { populateMensagens } = require('@mongo/models/mensagens/populate');
-const { populateNotificacoes } = require('@mongo/models/notificacoes/populate');
+const { populateAlunos } = require('./models/alunos/populate');
+const { populateEducadores } = require('./models/educadores/populate');
+const { populateExercicios } = require('./models/exercicios/populate');
+const { populateTreinos } = require('./models/treinos/populate');
+const { populateAvaliacoes } = require('./models/avaliacoes/populate');
+const { populateExecucoes } = require('./models/execucoes/populate');
+const { populateMensagens } = require('./models/mensagens/populate');
+const { populateNotificacoes } = require('./models/notificacoes/populate');
 
 const populateDB = async () => {
   console.log('🚀 Iniciando população do banco de dados...\n');

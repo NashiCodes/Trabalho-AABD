@@ -1,15 +1,12 @@
 (async () => {
-  require('module-alias/register');
   const mongoose = require('mongoose');
   const { connectMongoDB } = require('./config/connection');
   const Aluno = require('./models/alunos/index');
-  const Educador = require('./models/educadores/index');
   const Exercicio = require('./models/exercicios/index');
   const Treino = require('./models/treinos/index');
   const Avaliacao = require('./models/avaliacoes/index');
   const Execucao = require('./models/execucoes/index');
   const Mensagem = require('./models/mensagens/index');
-  const Notificacao = require('./models/notificacoes/index');
   const { populateDB } = require('./populate');
 
   await connectMongoDB();
