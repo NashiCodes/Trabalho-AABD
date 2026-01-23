@@ -98,6 +98,13 @@ mongod
 
 ### MongoDB
 
+#### Dump do Banco de Dados
+O dump do banco de dados MongoDB está disponível em `./dump/mongofit.dump`. Para restaurar o banco de dados, utilize o comando:
+
+```bash
+mongorestore --archive=./dump/mongofit.dump
+```
+
 #### Popular o banco de dados e executar consultas
 ```bash
 npm run mongo-queries
