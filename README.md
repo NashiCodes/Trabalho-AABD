@@ -1,15 +1,14 @@
 # Trabalho AABD - Sistemas de Gerenciamento de Banco de Dados
 
 ![MongoDB](https://img.shields.io/badge/MongoDB-6.0+-47A248?style=flat&logo=mongodb&logoColor=white)
-![Neo4j](https://img.shields.io/badge/Neo4j-6.0+-008CC1?style=flat&logo=neo4j&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat&logo=node.js&logoColor=white)
 ![License](https://img.shields.io/badge/license-ISC-blue)
 
-Projeto desenvolvido para a disciplina de **Administração e Análise de Banco de Dados (AABD)**, demonstrando a implementação de sistemas de gerenciamento de academias utilizando dois paradigmas de bancos de dados NoSQL: **MongoDB** (orientado a documentos) e **Neo4j** (orientado a grafos).
+Projeto desenvolvido para a disciplina de **Aspectos Avançados em Bancos de Dados**, demonstrando a implementação de um sistema de gerenciamento de academias utilizando **MongoDB** (banco de dados NoSQL orientado a documentos).
 
 ## Sobre o Projeto
 
-Este projeto implementa um sistema completo de gerenciamento de academia chamado **Mongo Fit**, incluindo:
+Este projeto implementa um sistema completo de gerenciamento de academia , incluindo:
 
 - Gestão de educadores físicos e alunos
 - Criação e acompanhamento de treinos personalizados
@@ -18,38 +17,34 @@ Este projeto implementa um sistema completo de gerenciamento de academia chamado
 - Sistema de avaliações e comunicação
 - Notificações e lembretes
 
-O sistema foi modelado e implementado em duas abordagens:
-- **MongoDB**: Exploando a flexibilidade de documentos e queries complexas com Aggregation Framework
-- **Neo4j**: Aproveitando relacionamentos de grafos para análises e conexões entre entidades
+O sistema foi modelado e implementado utilizando:
+- **MongoDB**: Explorando a flexibilidade de documentos e queries complexas com Aggregation Framework
 
 ## Estrutura do Projeto
 
 ```
 Trabalho-AABD/
 ├── docs/                      # Documentação
-│   ├── mongo/                 # Documentação MongoDB
-│   │   ├── exemplos-mongo.md  # Exemplos de documentos
-│   │   ├── modelagem-mongo.md # Modelagem detalhada
-│   │   ├── README.md          # Visão geral MongoDB
-│   │   └── relatórioMongo.doc # Relatório completo
-│   └── neo4j/                 # Documentação Neo4j
+│   └── mongo/                 # Documentação MongoDB
+│       ├── exemplos-mongo.md  # Exemplos de documentos
+│       ├── modelagem-mongo.md # Modelagem detalhada
+│       ├── README.md          # Visão geral MongoDB
+│       └── relatórioMongo.doc # Relatório completo
 │
 ├── src/                       # Código fonte
-│   ├── mongo/                 # Implementação MongoDB
-│   │   ├── config/            # Configuração de conexão
-│   │   ├── models/            # Modelos e schemas
-│   │   │   ├── alunos/
-│   │   │   ├── avaliacoes/
-│   │   │   ├── educadores/
-│   │   │   ├── execucoes/
-│   │   │   ├── exercicios/
-│   │   │   ├── mensagens/
-│   │   │   ├── notificacoes/
-│   │   │   └── treinos/
-│   │   ├── populate.js        # Script de população
-│   │   └── queries.js         # Consultas demonstrativas
-│   │
-│   └── neo4j/                 # Implementação Neo4j (em desenvolvimento)
+│   └── mongo/                 # Implementação MongoDB
+│       ├── config/            # Configuração de conexão
+│       ├── models/            # Modelos e schemas
+│       │   ├── alunos/
+│       │   ├── avaliacoes/
+│       │   ├── educadores/
+│       │   ├── execucoes/
+│       │   ├── exercicios/
+│       │   ├── mensagens/
+│       │   ├── notificacoes/
+│       │   └── treinos/
+│       ├── populate.js        # Script de população
+│       └── queries.js         # Consultas demonstrativas
 │
 ├── tests/                     # Testes automatizados
 ├── .gitignore                 # Arquivos ignorados pelo Git
@@ -61,12 +56,10 @@ Trabalho-AABD/
 
 ### Bancos de Dados
 - **MongoDB 6.0+**: Banco de dados NoSQL orientado a documentos
-- **Neo4j 6.0+**: Banco de dados NoSQL orientado a grafos
 
 ### Backend e Ferramentas
 - **Node.js 18+**: Ambiente de execução JavaScript
 - **Mongoose 9.1+**: ODM para MongoDB
-- **Neo4j Driver 6.0+**: Driver oficial para Neo4j
 - **dotenv**: Gerenciamento de variáveis de ambiente
 - **ESLint**: Linter para JavaScript
 - **Prettier**: Formatação de código
@@ -77,7 +70,6 @@ Antes de começar, certifique-se de ter instalado:
 
 - [Node.js](https://nodejs.org/) (versão 18 ou superior)
 - [MongoDB](https://www.mongodb.com/try/download/community) (versão 6.0 ou superior)
-- [Neo4j](https://neo4j.com/download/) (versão 6.0 ou superior) - opcional
 - [Git](https://git-scm.com/)
 
 ## Instalação
@@ -106,11 +98,6 @@ Exemplo de arquivo `.env`:
 # MongoDB
 MONGODB_URI=mongodb://localhost:27017/mongofit
 MONGODB_DB_NAME=mongofit
-
-# Neo4j
-NEO4J_URI=bolt://localhost:7687
-NEO4J_USER=neo4j
-NEO4J_PASSWORD=your_password
 ```
 
 4. Certifique-se de que o MongoDB está rodando:
@@ -242,9 +229,6 @@ Veja mais exemplos em [docs/mongo/exemplos-mongo.md](docs/mongo/exemplos-mongo.m
 - [Exemplos de Documentos](docs/mongo/exemplos-mongo.md)
 - [Relatório Completo](docs/mongo/relatórioMongo.doc)
 
-### Neo4j
-- Em desenvolvimento
-
 ## Características Implementadas
 
 ### MongoDB
@@ -258,13 +242,6 @@ Veja mais exemplos em [docs/mongo/exemplos-mongo.md](docs/mongo/exemplos-mongo.m
 - [x] Aggregation Framework
 - [x] Joins com `$lookup`
 - [x] Operadores complexos (`$group`, `$facet`, `$project`)
-
-### Neo4j
-- [ ] Modelagem de grafos
-- [ ] Nodes e relacionamentos
-- [ ] Consultas Cypher
-- [ ] Análise de caminhos
-- [ ] Visualizações
 
 ## Scripts Disponíveis
 
@@ -312,12 +289,4 @@ Este projeto está sob a licença ISC. Veja o arquivo [LICENSE](LICENSE) para ma
 
 - Professor(a) da disciplina de AABD
 - Documentação oficial do [MongoDB](https://docs.mongodb.com/)
-- Documentação oficial do [Neo4j](https://neo4j.com/docs/)
 - Comunidade Node.js
-
----
-
-**Universidade:** [Sua Universidade]  
-**Disciplina:** Administração e Análise de Banco de Dados  
-**Período:** 2026.1  
-**Data:** Janeiro de 2026
