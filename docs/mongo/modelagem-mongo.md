@@ -1,4 +1,4 @@
-# Modelagem do Banco de Dados - Mongo Fit
+# Modelagem do Banco de Dados MongoDB
 
 ## Modelos
 
