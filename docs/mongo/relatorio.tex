@@ -1,0 +1,1168 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+
+% Configuração para código Cypher
+\lstset{
+    language=SQL,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny,
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{gray!10},
+    frame=single,
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=2,
+    captionpos=b,
+    extendedchars=true,
+    inputencoding=utf8,
+    literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+             {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+             {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+             {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+             {ã}{{\~a}}1 {õ}{{\~o}}1 {Ã}{{\~A}}1 {Õ}{{\~O}}1
+             {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+             {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+             {ç}{{\c{c}}}1 {Ç}{{\c{C}}}1
+}
+
+\title{Aspectos Avançados de Banco de Dados\\Modelagem NoSQL para Gestão de Academias}
+\author{
+Igor Mattos da Motta - 202276006 \\ João Victor Pereira dos Anjos - 202176010 \\Pedro Detoni Pereira - 202176031
+}
+\date{Janeiro de 2026}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{INTRODUÇÃO}
+
+Este relatório apresenta a implementação de um sistema de gerenciamento para academias utilizando dois paradigmas de bancos de dados NoSQL: MongoDB (orientado a documentos) e Neo4j (orientado a grafos). Cada abordagem oferece vantagens específicas para diferentes aspectos do sistema, permitindo comparação direta entre modelos documentais e de grafos na resolução de problemas reais.
+
+\subsection{MongoDB - Banco Orientado a Documentos}
+
+O MongoDB é especialmente adequado para armazenar dados hierárquicos e semi-estruturados, oferecendo flexibilidade na modelagem através de documentos JSON/BSON. Permite documentos embarcados, arrays e referências, facilitando a representação de dados complexos sem a necessidade de múltiplas junções.
+
+\subsection{Neo4j - Banco Orientado a Grafos}
+
+Os bancos de dados em grafo têm se mostrado altamente eficientes para modelar relações complexas e dinâmicas entre entidades. Em ambientes como academias, onde existem vínculos entre educadores, alunos, treinos e exercícios, é vantajoso utilizar um modelo no qual a conectividade é tratada como elemento primário.
+
+\part{MONGODB - BANCO ORIENTADO A DOCUMENTOS}
+
+\textbf{Tecnologias Utilizadas:}
+
+O projeto foi desenvolvido em \textbf{Node.js} utilizando \textbf{Mongoose} como ODM (Object Document Mapper) para interação com o MongoDB. O Mongoose fornece validação de schemas, middleware, queries tipadas e abstração sobre o driver nativo do MongoDB.
+
+\textbf{Repositório:} \url{https://github.com/NashiCodes/Trabalho-AABD}
+
+\section{MODELAGEM DE DADOS - MONGODB}
+
+A modelagem do sistema de gerenciamento de academias utiliza 8 collections, organizadas para representar as entidades centrais do domínio
+
+A estratégia adotada combina \textbf{embedding} (documentos embarcados) e \textbf{referencing} (referências por ObjectId) de forma balanceada, considerando os padrões de acesso e os requisitos de consistência.
+
+\subsection{Entidades (Collections)}
+
+O sistema é composto por 8 collections. Para mais detalhes sobre os schemas, consulte o repositório do projeto.
+
+\begin{itemize}
+    \item \textbf{Educadores:} Profissionais responsáveis por orientar alunos e criar treinos. Armazena CREF, especialidades, contato e métricas de avaliação.
+    
+    \item \textbf{Alunos:} Usuários do sistema com dados pessoais (email, telefone, nascimento), dados físicos (peso, altura, IMC), objetivos, nível e restrições médicas. Contém histórico de avaliações físicas embarcado.
+    
+    \item \textbf{Exercícios:} Catálogo de exercícios com nome único, grupos musculares, tipo, equipamento necessário, nível de dificuldade e calorias estimadas.
+    
+    \item \textbf{Treinos:} Planilhas de treino criadas por educadores. Contém lista de exercícios embarcada com configurações específicas (séries, repetições, carga, descanso, ordem).
+
+    \item \textbf{Execuções:} Registro de treinos realizados por alunos, incluindo duração real, calorias queimadas, feedback, percepção de dificuldade e lista de exercícios executados.
+    
+    \item \textbf{Avaliações:} Feedback de alunos sobre educadores (nota, comentário, data).
+
+    \item \textbf{Mensagens:} Sistema de mensagens bidirecional entre educadores e alunos (campos polimórficos: remetenteId/Tipo, destinatarioId/Tipo).
+    
+    \item \textbf{Notificações:} Sistema de notificações para usuários (campos polimórficos: usuarioId/Tipo), incluindo tipo, título, mensagem e link opcional.
+\end{itemize}
+
+\subsection{Relacionamentos}
+
+A arquitetura utiliza estratégia híbrida combinando referências (ObjectId) e dados embarcados:
+
+\textbf{Relacionamentos por Referência (1:N):}
+\begin{itemize}
+    \item \texttt{Educadores $\rightarrow$ Alunos} (um educador orienta múltiplos alunos)
+    \item \texttt{Educadores $\rightarrow$ Treinos} (um educador cria múltiplos treinos)
+    \item \texttt{Alunos $\rightarrow$ Execuções} (um aluno realiza múltiplas execuções)
+    \item \texttt{Treinos $\rightarrow$ Execuções} (um treino pode ser executado múltiplas vezes)
+    \item \texttt{Educadores $\leftarrow$ Avaliações} (um educador recebe múltiplas avaliações)
+    \item \texttt{Alunos $\rightarrow$ Avaliações} (um aluno avalia múltiplos educadores)
+    \item \texttt{Mensagens:} Comunicação bidirecional entre Educadores e Alunos
+    \item \texttt{Notificações:} Sistema de alertas para ambos tipos de usuário
+    \item \texttt{Treinos.exercicios[]}: Lista de exercícios com configurações específicas (séries, repetições, carga)
+    \item \texttt{Execuções.exerciciosRealizados[]}: Registro de performance por exercício
+    \item \texttt{Alunos.historicoAvaliacoes[]}: Evolução física do aluno
+    \item \texttt{Alunos.dadosPessoais}, \texttt{dadosFisicos}: Dados agrupados logicamente
+    \item \texttt{Educadores.contato}: Informações de contato
+\end{itemize}
+
+\subsection{Índices Implementados}
+
+\textbf{1. Educadores}
+
+\textit{Índices automáticos (Mongoose):}
+\begin{itemize}
+    \item \texttt{\_id} - Índice único criado automaticamente
+    \item \texttt{cref} - Índice único (unique: true no schema)
+    \item \texttt{contato.email} - Índice único (unique: true no schema)
+\end{itemize}
+
+\textit{Índices criados:}
+\begin{itemize}
+    \item \texttt{especialidades: 1} - Busca por especialidades do educador
+\end{itemize}
+
+\textbf{2. Alunos}
+
+\textit{Índices automáticos (Mongoose):}
+\begin{itemize}
+    \item \texttt{\_id} - Índice único criado automaticamente
+    \item \texttt{dadosPessoais.email} - Índice único (unique: true no schema)
+\end{itemize}
+
+\textit{Índices criados:}
+\begin{itemize}
+    \item \texttt{educadorId: 1} - Busca rápida de alunos por educador
+    \item \texttt{nivel: 1} - Filtragem por nível do aluno
+    \item \texttt{objetivos: 1} - Busca por objetivos do aluno
+\end{itemize}
+
+\textbf{3. Exercícios}
+
+\textit{Índices automáticos (Mongoose):}
+\begin{itemize}
+    \item \texttt{\_id} - Índice único criado automaticamente
+    \item \texttt{nome} - Índice único (unique: true no schema)
+\end{itemize}
+
+\textit{Índices criados:}
+\begin{itemize}
+    \item \texttt{grupoMuscular: 1} - Busca por grupo muscular
+    \item \texttt{tipo: 1} - Filtragem por tipo de exercício
+    \item \texttt{nivelDificuldade: 1} - Busca por dificuldade
+    \item \texttt{equipamento: 1} - Filtrar por equipamento necessário
+\end{itemize}
+
+\textbf{4. Treinos}
+
+\textit{Índices automáticos (Mongoose):}
+\begin{itemize}
+    \item \texttt{\_id} - Índice único criado automaticamente
+\end{itemize}
+
+\textit{Índices criados:}
+\begin{itemize}
+    \item \texttt{criadoPor: 1} - Busca de treinos por educador criador
+    \item \texttt{nivel: 1} - Filtragem por nível de dificuldade
+    \item \texttt{objetivo: 1} - Filtragem por objetivo do treino
+    \item \texttt{tags: 1} - Busca por tags
+    \item \texttt{\{nome: 'text', descricao: 'text'\}} - Índice de texto completo para pesquisa
+\end{itemize}
+
+\textbf{5. Avaliações}
+
+\textit{Índices automáticos (Mongoose):}
+\begin{itemize}
+    \item \texttt{\_id} - Índice único criado automaticamente
+\end{itemize}
+
+\textit{Índices criados:}
+\begin{itemize}
+    \item \texttt{educadorId: 1} - Busca de avaliações por educador
+    \item \texttt{alunoId: 1} - Busca de avaliações por aluno
+    \item \texttt{dataAvaliacao: -1} - Ordenação temporal
+\end{itemize}
+
+\textbf{6. Execuções}
+
+\textit{Índices automáticos (Mongoose):}
+\begin{itemize}
+    \item \texttt{\_id} - Índice único criado automaticamente
+\end{itemize}
+
+\textit{Índices criados:}
+\begin{itemize}
+    \item \texttt{\{alunoId: 1, dataHora: -1\}} - Índice composto para histórico de execuções por aluno
+    \item \texttt{treinoId: 1} - Busca de execuções por treino
+    \item \texttt{dataHora: -1} - Ordenação por data
+    \item \texttt{concluido: 1} - Filtrar treinos concluídos
+\end{itemize}
+
+\textbf{7. Mensagens}
+
+\textit{Índices automáticos (Mongoose):}
+\begin{itemize}
+    \item \texttt{\_id} - Índice único criado automaticamente
+\end{itemize}
+
+\textit{Índices criados:}
+\begin{itemize}
+    \item \texttt{\{destinatarioId: 1, lida: 1, dataHora: -1\}} - Índice composto para caixa de entrada
+    \item \texttt{\{remetenteId: 1, dataHora: -1\}} - Índice composto para mensagens enviadas
+\end{itemize}
+
+\textbf{8. Notificações}
+
+\textit{Índices automáticos (Mongoose):}
+\begin{itemize}
+    \item \texttt{\_id} - Índice único criado automaticamente
+\end{itemize}
+
+\textit{Índices criados:}
+\begin{itemize}
+    \item \texttt{\{usuarioId: 1, lida: 1, dataCriacao: -1\}} - Índice composto para notificações por usuário
+    \item \texttt{tipo: 1} - Filtrar por tipo de notificação
+\end{itemize}
+
+\section{SCRIPT DE POPULAÇÃO - MONGODB}
+
+O script de população é modular, respeitando dependências entre collections:
+
+\begin{lstlisting}[caption=Orquestrador de População]
+const populateDB = async () => {
+  // Fase 1: Entidades base
+  await populateEducadores();
+  await populateAlunos();
+  await populateExercicios();
+  
+  // Fase 2: Entidades dependentes
+  await populateTreinos();
+  await populateAvaliacoes();
+  await populateExecucoes();
+  await populateMensagens();
+  await populateNotificacoes();
+};
+\end{lstlisting}
+
+\textbf{Dados gerados:} 10 educadores, 10 alunos, 10 exercícios, 8 treinos, 10 avaliações, 10 execuções, 10 mensagens, 10 notificações (total:78 documentos).
+
+\section{CONSULTAS}
+
+\subsection{Consulta 1: Buscar alunos por IMC}
+
+\textbf{Objetivo:} Demonstrar operadores de comparação \$gte e \$lte.
+
+\begin{lstlisting}[caption=Query 1 - IMC]
+Aluno.find({
+  'dadosFisicos.imc': { $gte: 22, $lte: 26 }
+}).select('nome dadosFisicos.imc');
+\end{lstlisting}
+
+\textbf{Resultado:}
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\toprule
+Nome & IMC \\
+\midrule
+João Silva & 25.6 \\
+Maria Oliveira & 22.8 \\
+Juliana Costa & 23.5 \\
+Rafael Almeida & 24.4 \\
+Fernanda Lima & 22.3 \\
+Lucas Rodrigues & 22.6 \\
+Camila Ferreira & 23.0 \\
+\bottomrule
+\end{tabular}
+\caption{7 alunos com IMC saudável encontrados}
+\end{table}
+
+\subsection{Consulta 2: Alunos iniciantes OU com restrições}
+
+\textbf{Objetivo:} Demonstrar operador lógico \$or.
+
+\begin{lstlisting}[caption=Query 2 - Filtro Lógico]
+Aluno.find({
+  $or: [
+    { nivel: 'Iniciante' },
+    { restricoesMedicas: { $ne: [] } }
+  ]
+}).select('nome nivel restricoesMedicas');
+\end{lstlisting}
+
+\textbf{Resultado:}
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Nome & Nível & Restrições \\
+\midrule
+Maria Oliveira & Iniciante & Problemas na coluna \\
+Carlos Eduardo & Avançado & Hipertensão \\
+Ana Paula Santos & Iniciante & Nenhuma \\
+Rafael Almeida & Iniciante & Diabetes tipo 2 \\
+Camila Ferreira & Iniciante & Asma \\
+\bottomrule
+\end{tabular}
+\caption{5 alunos que precisam atenção especial}
+\end{table}
+
+\subsection{Consulta 3: Exercícios por grupo muscular}
+
+\textbf{Objetivo:} Demonstrar operador \$in para arrays.
+
+\begin{lstlisting}[caption=Query 3 - Busca em Arrays]
+Exercicio.find({
+  grupoMuscular: { 
+    $in: ['Peitoral', 'Dorsais', 'Ombros'] 
+  }
+}).select('nome grupoMuscular tipo');
+\end{lstlisting}
+
+\textbf{Resultado:}
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+Exercício & Grupos Musculares \\
+\midrule
+Remada Curvada & Dorsais, Bíceps, Trapézio \\
+Supino Reto & Peitoral, Tríceps, Ombros \\
+Desenvolvimento Militar & Ombros, Tríceps \\
+\bottomrule
+\end{tabular}
+\caption{3 exercícios para parte superior}
+\end{table}
+
+\subsection{Consulta 4: Média de avaliações por educador}
+
+\textbf{Objetivo:} Demonstrar agregação com \$group, \$avg e \$lookup.
+
+\begin{lstlisting}[caption=Query 4 - Aggregation Framework]
+Avaliacao.aggregate([
+  {
+    $group: {
+      _id: '$educadorId',
+      mediaAvaliacoes: { $avg: '$nota' },
+      totalAvaliacoes: { $count: {} }
+    }
+  },
+  {
+    $lookup: {
+      from: 'educadores',
+      localField: '_id',
+      foreignField: '_id',
+      as: 'educador'
+    }
+  },
+  { $unwind: '$educador' },
+  {
+    $project: {
+      nome: '$educador.nome',
+      mediaAvaliacoes: { 
+        $round: ['$mediaAvaliacoes', 2] 
+      },
+      totalAvaliacoes: 1
+    }
+  },
+  { $sort: { mediaAvaliacoes: -1 } }
+]);
+\end{lstlisting}
+
+\textbf{Resultado:}
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Educador & Média & Total \\
+\midrule
+Carla Mendes & 4.75 & 4 \\
+Fernando Silva & 4.67 & 3 \\
+Roberto Almeida & 4.33 & 3 \\
+\bottomrule
+\end{tabular}
+\caption{Ranking de educadores por avaliação}
+\end{table}
+
+\subsection{Consulta 5: Treinos mais eficientes (calorias/minuto)}
+
+\textbf{Objetivo:} Demonstrar \$project com expressões matemáticas, \$divide, \$lookup e \$unwind.
+
+\begin{lstlisting}[caption=Query 5 - Cálculos com Expressões]
+Treino.aggregate([
+  {
+    $match: {
+      duracaoEstimada: { $gt: 0 },
+      caloriasEstimadas: { $gt: 0 }
+    }
+  },
+  {
+    $project: {
+      nome: 1,
+      nivel: 1,
+      duracaoEstimada: 1,
+      caloriasEstimadas: 1,
+      criadoPor: 1,
+      eficienciaCalórica: {
+        $round: [
+          { $divide: ['$caloriasEstimadas', 
+                      '$duracaoEstimada'] }, 
+          2
+        ]
+      },
+      totalExercicios: { $size: '$exercicios' }
+    }
+  },
+  { $sort: { eficienciaCalórica: -1 } },
+  { $limit: 5 },
+  {
+    $lookup: {
+      from: 'educadores',
+      localField: 'criadoPor',
+      foreignField: '_id',
+      as: 'educador'
+    }
+  },
+  { $unwind: '$educador' },
+  {
+    $project: {
+      nome: 1,
+      nivel: 1,
+      duracaoEstimada: 1,
+      caloriasEstimadas: 1,
+      eficienciaCalórica: 1,
+      totalExercicios: 1,
+      educadorNome: '$educador.nome'
+    }
+  }
+]);
+\end{lstlisting}
+
+\textbf{Resultado:}
+
+\textit{Nota: As colunas duração, calorias e educador foram omitidas para melhor visualização no PDF.}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Treino & Nível & Eficiência & Exercícios \\
+\midrule
+Treino HIIT - Emagrecimento & Avançado & 15.00 kcal/min & 2 \\
+Treino Full Body Iniciante & Iniciante & 6.22 kcal/min & 3 \\
+Treino C - Pernas Completo & Avançado & 6.11 kcal/min & 2 \\
+Treino D - Ombros e Abdômen & Intermediário & 6.00 kcal/min & 2 \\
+Treino A - Peito e Tríceps & Iniciante & 5.83 kcal/min & 2 \\
+\bottomrule
+\end{tabular}
+\caption{Treinos com melhor relação calorias/tempo}
+\end{table}
+
+\subsection{Consulta 6: Educadores com suas avaliações}
+
+\textbf{Objetivo:} Usar \$lookup, \$project com \$size, \$avg, e \$addFields com \$max/\$min.
+
+\begin{lstlisting}[caption=Query 6 - Análise de Educadores]
+Educador.aggregate([
+  {
+    $lookup: {
+      from: 'avaliacoes',
+      localField: '_id',
+      foreignField: 'educadorId',
+      as: 'avaliacoes'
+    }
+  },
+  {
+    $project: {
+      nome: 1,
+      especialidades: 1,
+      cref: 1,
+      alunosAtivos: 1,
+      totalAvaliacoes: { $size: '$avaliacoes' },
+      notasRecebidas: '$avaliacoes.nota',
+      avaliacaoCalculada: { $avg: '$avaliacoes.nota' }
+    }
+  },
+  { $match: { totalAvaliacoes: { $gt: 0 } } },
+  {
+    $addFields: {
+      melhorNota: { $max: '$notasRecebidas' },
+      piorNota: { $min: '$notasRecebidas' }
+    }
+  },
+  { $sort: { avaliacaoCalculada: -1 } }
+]);
+\end{lstlisting}
+
+\textbf{Resultado:}
+
+\textit{Nota: As colunas especialidades e alunos ativos foram omitidas para melhor visualização no PDF.}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+Educador & CREF & Avaliação & Total & Min/Max \\
+\midrule
+Carla Mendes & 234567-G/RJ & 4.75 & 4 & 4/5 \\
+Fernando Silva & 345678-G/MG & 4.67 & 3 & 4/5 \\
+Roberto Almeida & 123456-G/SP & 4.33 & 3 & 4/5 \\
+\bottomrule
+\end{tabular}
+\caption{Educadores ordenados por avaliação média}
+\end{table}
+
+\subsection{Consulta 7: Notificações por usuário}
+
+\textbf{Objetivo:} Demonstrar \$group com múltiplas agregações, \$lookup duplo e \$ifNull.
+
+\begin{lstlisting}[caption=Query 7 - Análise de Notificações]
+Notificacao.aggregate([
+  {
+    $group: {
+      _id: {
+        usuarioId: '$usuarioId',
+        usuarioTipo: '$usuarioTipo'
+      },
+      totalNotificacoes: { $count: {} },
+      naoLidas: { $sum: { $cond: ['$lida', 0, 1] } },
+      tipos: { $addToSet: '$tipo' },
+      ultimaNotificacao: { $max: '$dataCriacao' }
+    }
+  },
+  { $match: { totalNotificacoes: { $gte: 2 } } },
+  { $sort: { naoLidas: -1, totalNotificacoes: -1 } },
+  { $limit: 5 },
+  {
+    $lookup: {
+      from: 'alunos',
+      localField: '_id.usuarioId',
+      foreignField: '_id',
+      as: 'aluno'
+    }
+  },
+  {
+    $lookup: {
+      from: 'educadores',
+      localField: '_id.usuarioId',
+      foreignField: '_id',
+      as: 'educador'
+    }
+  },
+  {
+    $project: {
+      usuarioTipo: '$_id.usuarioTipo',
+      totalNotificacoes: 1,
+      naoLidas: 1,
+      tipos: 1,
+      nome: {
+        $ifNull: [
+          { $arrayElemAt: ['$aluno.nome', 0] },
+          { $arrayElemAt: ['$educador.nome', 0] }
+        ]
+      }
+    }
+  }
+]);
+\end{lstlisting}
+
+\textbf{Resultado:}
+
+\textit{Nota: A coluna tipos de notificações foi omitida para melhor visualização no PDF.}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Usuário & Tipo & Total & Não lidas \\
+\midrule
+João Silva & Aluno & 2 & 1 \\
+Maria Oliveira & Aluno & 2 & 1 \\
+\bottomrule
+\end{tabular}
+\caption{Top usuários com mais notificações}
+\end{table}
+
+\subsection{Consulta 8: Top 5 execuções mais difíceis}
+
+\textbf{Objetivo:} Demonstrar \$match, \$sort, \$limit e \$lookup.
+
+\begin{lstlisting}[caption=Query 8 - Ranking de Dificuldade]
+Execucao.aggregate([
+  {
+    $match: {
+      concluido: true,
+      dificuldadePercebida: { $exists: true }
+    }
+  },
+  { $sort: { dificuldadePercebida: -1 } },
+  { $limit: 5 },
+  {
+    $lookup: {
+      from: 'alunos',
+      localField: 'alunoId',
+      foreignField: '_id',
+      as: 'aluno'
+    }
+  },
+  { $unwind: '$aluno' },
+  {
+    $project: {
+      nomeAluno: '$aluno.nome',
+      dificuldadePercebida: 1,
+      duracaoReal: 1,
+      caloriasQueimadas: 1,
+      feedbackAluno: 1
+    }
+  }
+]);
+\end{lstlisting}
+
+\textbf{Resultado:}
+
+\textit{Nota: A coluna feedback do aluno foi omitida para melhor visualização no PDF.}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Aluno & Dificuldade & Duração & Calorias \\
+\midrule
+Pedro Henrique & 10/10 & 32min & 465kcal \\
+Ana Paula Santos & 9/10 & 85min & 540kcal \\
+Carlos Eduardo & 9/10 & 95min & 580kcal \\
+Maria Oliveira & 8/10 & 75min & 420kcal \\
+João Silva & 7/10 & 70min & 395kcal \\
+\bottomrule
+\end{tabular}
+\caption{Treinos mais desafiadores reportados}
+\end{table}
+
+\subsection{Consulta 9: Alunos com histórico de avaliações}
+
+\textbf{Objetivo:} Operadores \$exists e \$ne para arrays.
+
+\begin{lstlisting}[caption=Query 9 - Validação de Arrays]
+Aluno.find({
+  historicoAvaliacoes: { 
+    $exists: true, 
+    $ne: [] 
+  }
+}).select('nome historicoAvaliacoes');
+\end{lstlisting}
+
+\textbf{Resultado:}
+
+\textit{Nota: As colunas data da avaliação e percentual de gordura foram omitidas para melhor visualização no PDF.}
+
+\begin{center}
+\small
+\begin{tabular}{lcc}
+\toprule
+Aluno & Avaliações & Último Peso \\
+\midrule
+João Silva & 1 & 80kg \\
+Carlos Eduardo & 1 & 95kg \\
+Pedro Henrique & 1 & 85kg \\
+Fernanda Lima & 1 & 59kg \\
+\bottomrule
+\end{tabular}
+
+\textit{Tabela 9: 4 alunos com histórico físico}
+\end{center}
+
+\subsection{Consulta 10: Estatísticas de mensagens por educador}
+
+\textbf{Objetivo:} Pipeline complexo com \$facet.
+
+\begin{lstlisting}[caption=Query 10 - Facet Pipeline]
+Mensagem.aggregate([
+  {
+    $facet: {
+      enviadas: [
+        { $match: { remetenteTipo: 'Educador' } },
+        { $group: {
+            _id: '$remetenteId',
+            totalEnviadas: { $count: {} }
+        }}
+      ],
+      recebidas: [
+        { $match: { destinatarioTipo: 'Educador' } },
+        { $group: {
+            _id: '$destinatarioId',
+            totalRecebidas: { $count: {} }
+        }}
+      ]
+    }
+  },
+  {
+    $project: {
+      mensagens: { 
+        $concatArrays: ['$enviadas', '$recebidas'] 
+      }
+    }
+  },
+  { $unwind: '$mensagens' },
+  {
+    $group: {
+      _id: '$mensagens._id',
+      totalEnviadas: { $sum: '$mensagens.totalEnviadas' },
+      totalRecebidas: { $sum: '$mensagens.totalRecebidas' }
+    }
+  },
+  {
+    $lookup: {
+      from: 'educadores',
+      localField: '_id',
+      foreignField: '_id',
+      as: 'educador'
+    }
+  },
+  { $unwind: '$educador' },
+  {
+    $project: {
+      nome: '$educador.nome',
+      totalEnviadas: 1,
+      totalRecebidas: 1,
+      total: { 
+        $add: ['$totalEnviadas', '$totalRecebidas'] 
+      }
+    }
+  },
+  { $sort: { total: -1 } }
+]);
+\end{lstlisting}
+
+\textbf{Resultado:}
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\toprule
+Educador & Enviadas & Recebidas & Total \\
+\midrule
+Carla Mendes & 2 & 2 & 4 \\
+Roberto Almeida & 1 & 2 & 3 \\
+Fernando Silva & 1 & 2 & 3 \\
+\bottomrule
+\end{tabular}
+\caption{Atividade de comunicação dos educadores}
+\end{table}
+
+\part{NEO4J - BANCO ORIENTADO A GRAFOS}
+
+\section{MODELAGEM DE DADOS (PROPERTY GRAPH)}
+
+A modelagem adotada utiliza o Property Graph Model: nós (labels) e relacionamentos com propriedades. Relacionamentos carregam atributos como séries, repetições e percepção de esforço, facilitando análises que, em modelo relacional, exigiriam tabelas associativas e junções custosas.
+
+\subsection{Componentes do Modelo}
+
+\textbf{Labels (Nós):}
+
+\begin{itemize}
+    \item Educador
+    \item Aluno
+    \item Treino
+    \item Exercicio
+\end{itemize}
+
+\textbf{Relacionamentos e propriedades relevantes:}
+
+\begin{itemize}
+    \item (Educador)-[:ORIENTA]->(Aluno)
+    \item (Educador)-[:CRIOU]->(Treino) \hfill // autoria
+    \item (Aluno)-[:SEGUE]->(Treino) \hfill // adesão/planilha atual
+    \item (Treino)-[:CONTEM \{series, reps\}]->(Exercicio) \hfill // composição da ficha
+    \item (Aluno)-[:REALIZOU \{data, percepcao\_esforco\}]->(Treino) \hfill // histórico
+\end{itemize}
+
+\textbf{Justificativa:} armazenar métricas em relacionamentos permite consultas diretas de volume, frequência e percepção de esforço sem junções complexas.
+
+\section{SCRIPT DE CARGA E POPULAÇÃO (SEED SCRIPT)}
+
+O script abaixo limpa o banco e insere os dados iniciais usados nas consultas. APÊNDICE A (aqui replicado) contém exatamente o script pronto para execução.
+
+\textbf{(Bloco de comando — formato plain text; aplicar em Neo4j Browser ou cypher-shell)}
+
+\lstset{language=SQL, caption=Script de População (Seed)}
+\begin{lstlisting}
+/* --- LIMPEZA --- */
+MATCH (n)
+DETACH DELETE n;
+
+/* --- CRIAÇÃO DE EDUCADORES --- */
+CREATE (pedro:Educador {id: 'e1', nome: 'Pedro', especialidade: 'Hipertrofia'});
+CREATE (carla:Educador {id: 'e2', nome: 'Carla', especialidade: 'Funcional'});
+
+/* --- CRIAÇÃO DE EXERCÍCIOS --- */
+CREATE (ex1:Exercicio {nome: 'Supino Reto', grupo_muscular: 'Peito'});
+CREATE (ex2:Exercicio {nome: 'Agachamento Livre', grupo_muscular: 'Pernas'});
+CREATE (ex3:Exercicio {nome: 'Corrida na Esteira', grupo_muscular: 'Cardio'});
+CREATE (ex5:Exercicio {nome: 'Burpee', grupo_muscular: 'Corpo Todo'});
+
+/* --- CRIAÇÃO DE TREINOS --- */
+CREATE (t1:Treino {id: 't1', nome: 'Treino A - Força Bruta', foco: 'Força'});
+CREATE (t2:Treino {id: 't2', nome: 'Treino Circuito', foco: 'Emagrecimento'});
+
+/* --- RELACIONAMENTOS DE AUTORIA --- */
+CREATE (pedro)-[:CRIOU]->(t1);
+CREATE (carla)-[:CRIOU]->(t2);
+
+/* --- COMPOSIÇÃO DOS TREINOS --- */
+CREATE (t1)-[:CONTEM {series: 5, reps: 5}]->(ex1);
+CREATE (t1)-[:CONTEM {series: 5, reps: 5}]->(ex2);
+CREATE (t1)-[:CONTEM {series: 1, reps: 20}]->(ex5);
+CREATE (t2)-[:CONTEM {series: 3, reps: 15}]->(ex3);
+CREATE (t2)-[:CONTEM {series: 3, reps: 10}]->(ex5);
+
+/* --- CRIAÇÃO DE ALUNOS --- */
+CREATE (a4:Aluno {id: 'a4', nome: 'Carlos', objetivo: 'Hipertrofia', nivel: 'Intermediário'});
+CREATE (a7:Aluno {id: 'a7', nome: 'Gustavo', objetivo: 'Hipertrofia', nivel: 'Intermediário'});
+CREATE (a8:Aluno {id: 'a8', nome: 'Fernanda', objetivo: 'Saúde', nivel: 'Iniciante'});
+CREATE (a13:Aluno {id: 'a13', nome: 'Marcos', objetivo: 'Condicionamento', nivel: 'Intermediário'});
+CREATE (a18:Aluno {id: 'a18', nome: 'Vanessa', objetivo: 'Funcional', nivel: 'Avançado'});
+
+/* --- ORIENTAÇÃO --- */
+CREATE (pedro)-[:ORIENTA]->(a4);
+CREATE (pedro)-[:ORIENTA]->(a7);
+CREATE (pedro)-[:ORIENTA]->(a8);
+CREATE (carla)-[:ORIENTA]->(a13);
+CREATE (carla)-[:ORIENTA]->(a18);
+
+/* --- ADESÃO AOS TREINOS --- */
+CREATE (a4)-[:SEGUE]->(t1);
+CREATE (a7)-[:SEGUE]->(t1);
+CREATE (a7)-[:SEGUE]->(t2);
+CREATE (a13)-[:SEGUE]->(t2);
+CREATE (a18)-[:SEGUE]->(t2);
+
+/* --- HISTÓRICO DE EXECUÇÕES --- */
+CREATE (a4)-[:REALIZOU {data: date('2023-10-20'), percepcao_esforco: 9}]->(t1);
+CREATE (a4)-[:REALIZOU {data: date('2023-10-22'), percepcao_esforco: 9}]->(t1);
+CREATE (a13)-[:REALIZOU {data: date('2023-10-21'), percepcao_esforco: 7}]->(t2);
+\end{lstlisting}
+
+\section{CONSULTAS ANALÍTICAS (CYPHER) — QUERIES E RESULTADOS}
+
+A seguir estão todas as consultas (Cypher) utilizadas no experimento, seguidas pelos resultados obtidos com os dados do seed acima. Mantive a sintaxe pronta para execução no Neo4j Browser / cypher-shell.
+
+\subsection{Consulta 1 — SISTEMA DE RECOMENDAÇÃO}
+
+\textbf{Objetivo:} Sugerir treinos baseados em alunos com mesmo nível e objetivo.
+
+\lstset{caption=Consulta 1 - Sistema de Recomendação}
+\begin{lstlisting}
+MATCH (carlos:Aluno {nome: 'Carlos'})
+MATCH (gemeo:Aluno)
+WHERE gemeo.nivel = carlos.nivel
+AND gemeo.objetivo = carlos.objetivo
+AND gemeo.id <> carlos.id
+MATCH (gemeo)-[:SEGUE]->(t:Treino)
+WHERE NOT (carlos)-[:SEGUE]->(t)
+RETURN t.nome AS Sugestao, count(gemeo) AS Popularidade;
+\end{lstlisting}
+
+\textbf{Resultado:}
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\toprule
+Sugestao & Popularidade \\
+\midrule
+Treino Circuito & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretação:} O sistema recomenda ``Treino Circuito'' para Carlos, pois existe pelo menos um outro aluno (gêmeo de perfil) que segue esse treino.
+
+\subsection{Consulta 2 — ANÁLISE DE CONECTIVIDADE (SHORTEST PATH)}
+
+\textbf{Objetivo:} Encontrar caminho mínimo entre dois alunos (ex.: Fernanda e Vanessa).
+
+\textbf{Query:}
+\lstset{caption=Consulta 2 - Shortest Path}
+\begin{lstlisting}
+MATCH path = shortestPath(
+(a1:Aluno {nome: 'Fernanda'})-[*..15]-(a2:Aluno {nome: 'Vanessa'})
+)
+RETURN path;
+\end{lstlisting}
+
+\textbf{Resultado:} Retorna o caminho mínimo visualizável no Neo4j Browser, por exemplo: Fernanda $\rightarrow$ (orientado por) Pedro $\rightarrow$ (ORIENTA) Gustavo $\rightarrow$ (SEGUE) Treino Circuito $\rightarrow$ (SEGUE por) Vanessa
+
+\textbf{(Nota:} o grafo permite diversas rotas; o caminho exato é exibido pela função shortestPath)
+
+\textbf{Interpretação:} A rede está conectada entre esses alunos via educadores e treinos, o que possibilita propagação de informações e recomendação via vizinhança.
+
+\subsection{Consulta 3 — DETECÇÃO DE CHURN (INATIVIDADE)}
+
+\textbf{Objetivo:} Identificar alunos sem histórico de execução (possível churn).
+
+\textbf{Query:}
+\lstset{caption=Consulta 3 - Detecção de Churn}
+\begin{lstlisting}
+MATCH (a:Aluno)
+WHERE NOT (a)-[:REALIZOU]->()
+RETURN a.nome AS Nome, a.objetivo AS Objetivo;
+\end{lstlisting}
+
+\textbf{Resultado:}
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\toprule
+Nome & Objetivo \\
+\midrule
+Gustavo & Hipertrofia \\
+Fernanda & Saúde \\
+Vanessa & Funcional \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretação:} Três alunos não possuem registros de REALIZOU. Observação importante: Gustavo segue treinos (t1 e t2) mas não realizou nenhum — sinal de risco de evasão ou necessidade de engajamento ativo.
+
+
+\subsection{Consulta 4 — ALERTA DE OVERTRAINING}
+
+\textbf{Objetivo:} Detectar alunos com percepção de esforço (PSE) >= 9 em registros repetidos.
+
+\textbf{Query:}
+\lstset{caption=Consulta 4 - Alerta de Overtraining}
+\begin{lstlisting}
+MATCH (a:Aluno)-[r:REALIZOU]->(t:Treino)
+WHERE r.percepcao_esforco >= 9
+WITH a, count(r) AS Qtd
+WHERE Qtd >= 2
+RETURN a.nome AS Aluno, Qtd AS Treinos_Extremos;
+\end{lstlisting}
+
+\textbf{Resultado:}
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\toprule
+Aluno & Treinos\_Extremos \\
+\midrule
+Carlos & 2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretação:} Carlos possui dois registros com PSE >= 9 — indicador de possível overtraining, requerendo avaliação do educador.
+
+\subsection{Consulta 5 — HEATMAP MUSCULAR (VOLUME POR GRUPO)}
+
+\textbf{Objetivo:} Calcular volume acumulado por grupo muscular para o aluno Marcos.
+
+\textbf{Query:}
+\lstset{caption=Consulta 5 - Heatmap Muscular}
+\begin{lstlisting}
+MATCH (a:Aluno {nome: 'Marcos'})-[r:REALIZOU]->(t:Treino)-[c:CONTEM]->(ex:Exercicio)
+WITH ex.grupo_muscular AS Musculo, (c.series * c.reps) AS Vol
+RETURN Musculo, sum(Vol) AS Volume_Total;
+\end{lstlisting}
+
+\textbf{Resultado:}
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\toprule
+Musculo & Volume\_Total \\
+\midrule
+Cardio & 45 \\
+Corpo Todo & 30 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Cálculo:} para cada relação CONTEM, volume = series * reps; somatório por grupo.
+
+\subsection{Consulta 6 — RANKING DE ASSIDUIDADE}
+
+\textbf{Objetivo:} Ranqueamento de alunos por número total de execuções registradas.
+
+\textbf{Query:}
+\lstset{caption=Consulta 6 - Ranking de Assiduidade}
+\begin{lstlisting}
+MATCH (a:Aluno)-[r:REALIZOU]->(t:Treino)
+RETURN a.nome AS Aluno, count(r) AS Total
+ORDER BY Total DESC;
+\end{lstlisting}
+
+\textbf{Resultado:}
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\toprule
+Aluno & Total \\
+\midrule
+Carlos & 2 \\
+Marcos & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretação:} Carlos apresenta maior frequência registrada.
+
+\subsection{Consulta 7 — ANÁLISE DE IMPACTO (BUSCA REVERSA)}
+
+\textbf{Objetivo:} Listar alunos impactados pela indisponibilidade de um exercício (Ex.: ``Corrida na Esteira'').
+
+\textbf{Query:}
+\lstset{caption=Consulta 7 - Análise de Impacto}
+\begin{lstlisting}
+MATCH (ex:Exercicio {nome: 'Corrida na Esteira'})<-[:CONTEM]-(t:Treino)<-[:SEGUE]-(a:Aluno)
+RETURN t.nome AS Treino, collect(a.nome) AS Alunos_Afetados;
+\end{lstlisting}
+
+\textbf{Resultado:}
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\toprule
+Treino & Alunos\_Afetados \\
+\midrule
+Treino Circuito & [Gustavo, Marcos, Vanessa] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretação:} Manutenção na esteira impacta diretamente esses alunos; ação operacional necessária (comunicação, substituição de exercício).
+
+\subsection{Consulta 8 — VALIDAÇÃO DE INTEGRIDADE}
+
+\textbf{Objetivo:} Encontrar alunos que têm educador vinculado, mas não seguem nenhum treino.
+
+\textbf{Query:}
+\lstset{caption=Consulta 8 - Validação de Integridade}
+\begin{lstlisting}
+MATCH (a:Aluno)
+WHERE NOT (a)-[:SEGUE]->(:Treino)
+MATCH (p:Educador)-[:ORIENTA]->(a)
+RETURN a.nome AS Aluno, p.nome AS Professor;
+\end{lstlisting}
+
+\textbf{Resultado:}
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\toprule
+Aluno & Professor \\
+\midrule
+Fernanda & Pedro \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretação:} Fernanda está orientada por Pedro, mas não possui ficha associada; requer verificação administrativa/operacional.
+
+\subsection{Consulta 9 — CARGA TOTAL PLANEJADA}
+
+\textbf{Objetivo:} Somar repetições teóricas por treino (soma de series * reps).
+
+\textbf{Query:}
+\lstset{caption=Consulta 9 - Carga Total Planejada}
+\begin{lstlisting}
+MATCH (t:Treino)-[r:CONTEM]->(ex:Exercicio)
+RETURN t.nome AS Treino, sum(r.series * r.reps) AS Reps_Totais;
+\end{lstlisting}
+
+\textbf{Resultado:}
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\toprule
+Treino & Reps\_Totais \\
+\midrule
+Treino Circuito & 75 \\
+Treino A - Força Bruta & 70 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Cálculo exemplo (Treino Circuito):}
+Corrida na Esteira: 3 séries x 15 reps = 45 \\
+Burpee: 3 séries x 10 reps = 30 \\
+\textbf{Total = 45 + 30 = 75}
+
+\subsection{Consulta 10 — DASHBOARD DO EDUCADOR}
+
+\textbf{Objetivo:} Visão consolidada da rede do educador (alunos orientados e treinos criados).
+
+\textbf{Query:}
+\lstset{caption=Consulta 10 - Dashboard do Educador}
+\begin{lstlisting}
+MATCH (p:Educador {nome: 'Pedro'})
+OPTIONAL MATCH (p)-[:ORIENTA]->(a:Aluno)
+OPTIONAL MATCH (p)-[:CRIOU]->(t:Treino)
+RETURN p.nome AS Educador,
+collect(DISTINCT a.nome) AS Alunos,
+collect(DISTINCT t.nome) AS Treinos;
+\end{lstlisting}
+
+\textbf{Resultado (retorno):}
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Educador & Alunos & Treinos \\
+\midrule
+Pedro & [Carlos, Gustavo, Fernanda] & [Treino A - Força Bruta] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretação:} Visão operacional para o professor Pedro gerenciar alunos e treinos.
+
+\section{CONCLUSÃO}
+
+Este trabalho implementou um sistema de gerenciamento de academias utilizando dois paradigmas NoSQL complementares: MongoDB (orientado a documentos) e Neo4j (orientado a grafos).
+
+O \textbf{MongoDB}, com sua modelagem híbrida de embedding e referencing, demonstrou flexibilidade para representar dados hierárquicos e semi-estruturados. O uso do Mongoose ODM proporcionou validação de schemas, indexação automática e queries tipadas. As 10 consultas analíticas desenvolvidas exploraram recursos avançados do Aggregation Framework (\$lookup, \$group, \$facet, \$project), demonstrando capacidade para análises complexas como eficiência calórica, ranking de educadores e estatísticas de comunicação.
+
+O \textbf{Neo4j}, através do modelo Property Graph, permitiu modelar relacionamentos de forma natural, resultando em consultas expressivas para recomendação, análise de churn, detecção de overtraining e impacto operacional. A linguagem Cypher simplificou consultas que, em modelos relacionais, exigiriam múltiplas junções.
+
+Ambas as abordagens apresentam trade-offs: MongoDB favorece agregações e queries hierárquicas, enquanto Neo4j excele em análises de conectividade e traversal de grafos. A escolha entre eles deve considerar requisitos específicos de consulta, volume de dados e complexidade relacional.
+
+\section{REFERÊNCIAS}
+
+MONGODB. \textbf{MongoDB Documentation}. Disponível em: \url{https://www.mongodb.com/docs/}. Acesso em: 23 jan. 2026.
+
+MONGODB. \textbf{MongoDB Manual: Aggregation Pipeline}. Disponível em: \url{https://www.mongodb.com/docs/manual/core/aggregation-pipeline/}. Acesso em: 23 jan. 2026.
+
+AUTOMATTIC. \textbf{Mongoose ODM Documentation}. Disponível em: \url{https://mongoosejs.com/docs/}. Acesso em: 23 jan. 2026.
+
+CHODOROW, K.; DIROLF, M. \textbf{MongoDB: The Definitive Guide}. 3rd ed. O'Reilly Media, 2019.
+
+NEO4J. \textbf{Neo4j Graph Database}. Disponível em: \url{https://neo4j.com}. Acesso em: 22 jan. 2026.
+
+NEO4J. \textbf{Cypher Query Language Documentation}. Disponível em: \url{https://neo4j.com/docs/cypher-manual/}. Acesso em: 22 jan. 2026.
+
+\end{document}
