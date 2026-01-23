@@ -7,6 +7,8 @@
   const Avaliacao = require('./models/avaliacoes/index');
   const Execucao = require('./models/execucoes/index');
   const Mensagem = require('./models/mensagens/index');
+  const Educador = require('./models/educadores/index');
+  const Notificacao = require('./models/notificacoes/index');
   const { populateDB } = require('./populate');
 
   await connectMongoDB();
@@ -111,6 +113,7 @@
         nivel: 1,
         duracaoEstimada: 1,
         caloriasEstimadas: 1,
+        criadoPor: 1,
         eficienciaCalórica: {
           $round: [{ $divide: ['$caloriasEstimadas', '$duracaoEstimada'] }, 2],
         },
@@ -152,7 +155,133 @@
     console.log(`   Criado por: ${treino.educadorNome}`);
   });
 
+  console.log('\n=== QUERY 6: Educadores com suas avaliações usando $lookup e agregação ===');
+  console.log(
+    "\nQuery: \nEducador.aggregate([\n  { $lookup: { from: 'avaliacoes', localField: '_id', foreignField: 'educadorId', as: 'avaliacoes' } },\n  { $project: { nome: 1, especialidades: 1, cref: 1, alunosAtivos: 1, totalAvaliacoes: { $size: '$avaliacoes' }, notasRecebidas: '$avaliacoes.nota', avaliacaoCalculada: { $avg: '$avaliacoes.nota' } } },\n  { $match: { totalAvaliacoes: { $gt: 0 } } },\n  { $addFields: { melhorNota: { $max: '$notasRecebidas' }, piorNota: { $min: '$notasRecebidas' } } },\n  { $sort: { avaliacaoCalculada: -1, totalAvaliacoes: -1 } }\n]);\n"
+  );
+  const educadoresComAvaliacoes = await Educador.aggregate([
+    {
+      $lookup: {
+        from: 'avaliacoes',
+        localField: '_id',
+        foreignField: 'educadorId',
+        as: 'avaliacoes',
+      },
+    },
+    {
+      $project: {
+        nome: 1,
+        especialidades: 1,
+        cref: 1,
+        alunosAtivos: 1,
+        totalAvaliacoes: { $size: '$avaliacoes' },
+        notasRecebidas: '$avaliacoes.nota',
+        avaliacaoCalculada: { $avg: '$avaliacoes.nota' },
+      },
+    },
+    {
+      $match: { totalAvaliacoes: { $gt: 0 } },
+    },
+    {
+      $addFields: {
+        melhorNota: { $max: '$notasRecebidas' },
+        piorNota: { $min: '$notasRecebidas' },
+      },
+    },
+    { $sort: { avaliacaoCalculada: -1, totalAvaliacoes: -1 } },
+  ]);
+
+  console.log('Educadores com suas avaliações (ordenados por avaliação):');
+  educadoresComAvaliacoes.forEach((educador, idx) => {
+    console.log(
+      `${idx + 1}. ${educador.nome} (CREF: ${educador.cref}) - Avaliação: ${educador.avaliacaoCalculada.toFixed(2)}/5.0`
+    );
+    console.log(`   Especialidades: ${educador.especialidades.join(', ')}`);
+    console.log(
+      `   ${educador.totalAvaliacoes} avaliações recebidas | Alunos ativos: ${educador.alunosAtivos}`
+    );
+    console.log(
+      `   Notas: Melhor = ${educador.melhorNota}, Pior = ${educador.piorNota}`
+    );
+  });
+
+  console.log('\n=== QUERY 7: Análise de notificações por usuário usando $group ===');
+  console.log(
+    "\nQuery: \nNotificacao.aggregate([\n  { $group: { _id: { usuarioId: '$usuarioId', usuarioTipo: '$usuarioTipo' }, totalNotificacoes: { $count: {} }, naoLidas: { $sum: { $cond: ['$lida', 0, 1] } }, tipos: { $addToSet: '$tipo' }, ultimaNotificacao: { $max: '$dataCriacao' } } },\n  { $match: { totalNotificacoes: { $gte: 2 } } },\n  { $sort: { naoLidas: -1, totalNotificacoes: -1 } },\n  { $limit: 5 },\n  { $lookup: { from: 'alunos', localField: '_id.usuarioId', foreignField: '_id', as: 'aluno' } },\n  { $lookup: { from: 'educadores', localField: '_id.usuarioId', foreignField: '_id', as: 'educador' } },\n  { $project: { usuarioTipo: '$_id.usuarioTipo', totalNotificacoes: 1, naoLidas: 1, tipos: 1, ultimaNotificacao: 1, nome: { $ifNull: [{ $arrayElemAt: ['$aluno.nome', 0] }, { $arrayElemAt: ['$educador.nome', 0] }] } } }\n]);\n"
+  );
+  const notificacoesPorUsuario = await Notificacao.aggregate([
+    {
+      $group: {
+        _id: {
+          usuarioId: '$usuarioId',
+          usuarioTipo: '$usuarioTipo',
+        },
+        totalNotificacoes: { $count: {} },
+        naoLidas: { $sum: { $cond: ['$lida', 0, 1] } },
+        tipos: { $addToSet: '$tipo' },
+        ultimaNotificacao: { $max: '$dataCriacao' },
+      },
+    },
+    {
+      $match: { totalNotificacoes: { $gte: 2 } },
+    },
+    { $sort: { naoLidas: -1, totalNotificacoes: -1 } },
+    { $limit: 5 },
+    {
+      $lookup: {
+        from: 'alunos',
+        localField: '_id.usuarioId',
+        foreignField: '_id',
+        as: 'aluno',
+      },
+    },
+    {
+      $lookup: {
+        from: 'educadores',
+        localField: '_id.usuarioId',
+        foreignField: '_id',
+        as: 'educador',
+      },
+    },
+    {
+      $project: {
+        usuarioTipo: '$_id.usuarioTipo',
+        totalNotificacoes: 1,
+        naoLidas: 1,
+        tipos: 1,
+        ultimaNotificacao: 1,
+        nome: {
+          $ifNull: [
+            { $arrayElemAt: ['$aluno.nome', 0] },
+            { $arrayElemAt: ['$educador.nome', 0] },
+          ],
+        },
+      },
+    },
+  ]);
+
+  console.log('Top 5 usuários com mais notificações (mínimo 2):');
+  notificacoesPorUsuario.forEach((dest, idx) => {
+    const taxaLeitura = (
+      ((dest.totalNotificacoes - dest.naoLidas) / dest.totalNotificacoes) *
+      100
+    ).toFixed(1);
+    console.log(
+      `${idx + 1}. ${dest.nome || 'Usuário não encontrado'} (${dest.usuarioTipo || 'Tipo desconhecido'})`
+    );
+    console.log(
+      `   Total: ${dest.totalNotificacoes} notificações | Não lidas: ${dest.naoLidas} (Taxa leitura: ${taxaLeitura}%)`
+    );
+    console.log(`   Tipos recebidos: ${dest.tipos.join(', ')}`);
+    if (dest.ultimaNotificacao) {
+      console.log(
+        `   Última notificação: ${new Date(dest.ultimaNotificacao).toLocaleDateString('pt-BR')}`
+      );
+    }
+  });
+
   console.log('\n=== QUERY 8: Top 5 execuções mais difíceis usando $match, $sort e $limit ===');
+
   console.log(
     "\nQuery: \nExecucao.aggregate([\n  { $match: { concluido: true, dificuldadePercebida: { $exists: true } } },\n  { $sort: { dificuldadePercebida: -1 } },\n  { $limit: 5 },\n  { $lookup: { from: 'alunos', localField: 'alunoId', foreignField: '_id', as: 'aluno' } },\n  { $unwind: '$aluno' },\n  { $project: { nomeAluno: '$aluno.nome', dificuldadePercebida: 1, duracaoReal: 1, caloriasQueimadas: 1, feedbackAluno: 1 } }\n]);\n"
   );
